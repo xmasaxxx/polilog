@@ -1,0 +1,22 @@
+name: Polilog DB Auto-Sync
+on:
+  schedule:
+    - cron: '0 21 * * *' # 日本時間 朝6時
+  workflow_dispatch:      # 手動実行ボタンを出すぜ！
+
+jobs:
+  sync_job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install supabase requests
+      - name: Run sync script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python sync_ndl.py
