@@ -41,9 +41,9 @@ def main():
         latest_date = datetime.strptime(latest_date_str, "%Y-%m-%d")
         start_date = (latest_date - timedelta(days=3)).strftime("%Y-%m-%d")
         
-        # 2. NDL API にリクエスト！(⚠️まずはテストで5件)
+        # 2. NDL API にリクエスト！(NDL上限の100件)
         ndl_api_url = "https://kokkai.ndl.go.jp/api/1.0/speech"
-        params = {"from": start_date, "recordPacking": "json", "maximumRecords": 5}
+        params = {"from": start_date, "recordPacking": "json", "maximumRecords": 100}
         
         print(f"🌐 NDL API に {start_date} 以降のデータを取りに行ってるお...")
         response = requests.get(ndl_api_url, params=params)
