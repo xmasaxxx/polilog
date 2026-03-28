@@ -21,4 +21,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}         # 👈 追加！
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }} # 👈 追加！
+          MAIL_TO: ${{ secrets.MAIL_TO }}                     # 👈 追加！
         run: python sync_ndl.py
