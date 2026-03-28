@@ -1,35 +1,24 @@
 # polilog
 
-Masakatsu | Data Architect & Creator of Polilog
+Polilog: The Political Debugger
+「1,140万件のログが、日本の政治をデバッグする」
 
-「データは政治の真実を語る」
+1947年から2026年まで、1,140万件超の国会会議録および3.6万件の質問主意書を完全構造化・同期。独自の数理モデルで政治家の実務能力を評価する、次世代の政治データ解析基盤。
 
-1947年から2026年までの全・国会会議録を構造化し、政治家の「発言の質」を多角的に可視化する情報統括システム [Polilog] を開発しています。
+Logic & Protocol
+表面的なキーワード検索を超え、7つの独自Protocolで「発言の質」を解体します。
 
-Polilog の設計思想
-単なる議事録の検索サイトではなく、独自の数理モデルを用いて政治家の論理性、具体性、情報密度を算出します。現在は Protocol 1 (MSS: Mass Speech Score) を実装中。自然言語処理を用いて、発言に含まれるファクト（数字・固有名詞・法律）の密度を解析しています。
+Protocol 1 (MSS): Mass Speech Score. 発言内のファクト（数値・固有名詞・法案）の密度を算出。
 
-公平性の担保
-議長や委員長といった「役職」に伴う定型的な進行発言は、独自のアルゴリズムでフィルタリング。役職によるスコア低下を防ぎ、一議員としての実務能力を正確に評価するシステムを構築しています。
+Cross-Analysis: 質問主意書と答弁書をペアリングし、はぐらかしや具体性の欠如を検知。
 
-使用技術
+High-Purity Data: 1947年以降の和暦正規化、およびWebナビゲーションノイズを徹底除去。
 
-Language: Python (GiNZA, spaCy)
+🛠️ Architecture
+Backend: Supabase Pro (PostgreSQL) - 11.4M+ Rows Optimized.
 
-Backend: Supabase Pro (PostgreSQL) - 92,000件超の会議データを完全同期
+Pipeline: NDL API + Written Questions Scraper (GitHub Actions).
 
-Automation: GitHub Actions による NDL API デイリー自動更新パイプライン
+NLP: Python (spaCy / GiNZA) による高度な自然言語処理。
 
-Frontend: WordPress カスタムダッシュボード
-
-現在の進捗状況
-
-1947-2026 全議事録データの同期： 完了
-
-役職履歴データのDB統合： 完了
-
-Protocol 1 解析エンジンの本実装： 進行中
-
-議員マスターデータ（期数・政党変遷）の公的ソース連携： 準備中
-
-"次元の違う分析で、日本の政治に透明性を。"
+"次元の違う透明性を、すべての市民に。"
