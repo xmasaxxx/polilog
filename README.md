@@ -8,7 +8,7 @@ Polilog: The Political Debugger
 Logic & Protocol
 表面的なキーワード検索を超え、7つの独自Protocolで「発言の質」を解体します。
 
-Protocol 1 (MSS): Mass Speech Score. 発言内のファクト（数値・固有名詞・法案）の密度を算出。
+まずはProtocol 1 (MSS): Mass Speech Score. 発言内のファクト（数値・固有名詞・法案）の密度を算出。
 
 Cross-Analysis: 質問主意書と答弁書をペアリングし、はぐらかしや具体性の欠如を検知。
 
