@@ -379,7 +379,7 @@ def bulk_upsert(supabase: Client, records: list[dict]) -> tuple[int, list[str]]:
 # ---------------------------------------------------------------------------
 # メール通知
 # ---------------------------------------------------------------------------
-def send_error_report(errors: list[str]) -> None:
+def send_email(subject: str, body: str) -> None:
     gmail_address = os.environ.get("GMAIL_ADDRESS")
     gmail_password = os.environ.get("GMAIL_APP_PASSWORD")
     mail_to = os.environ.get("MAIL_TO")
@@ -388,9 +388,8 @@ def send_error_report(errors: list[str]) -> None:
         print("⚠️  メール通知の設定が不完全なためスキップします。")
         return
 
-    body = f"以下のエラーが発生しました（{len(errors)} 件）:\n\n" + "\n".join(errors)
     msg = MIMEText(body, "plain", "utf-8")
-    msg["Subject"] = "⚠️ [Polilog] 衆議院質問主意書の同期中にエラーが発生しました"
+    msg["Subject"] = subject
     msg["From"] = gmail_address
     msg["To"] = mail_to
 
@@ -398,7 +397,7 @@ def send_error_report(errors: list[str]) -> None:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
             smtp.login(gmail_address, gmail_password)
             smtp.send_message(msg)
-        print("📧 エラーレポートを送信しました。")
+        print("📧 メールを送信しました。")
     except Exception as e:
         print(f"⚠️  メール送信に失敗しました: {e}")
 
@@ -442,8 +441,23 @@ def main() -> None:
     print(f"\n🎉 同期完了！ upsert={upserted}件 / error={len(errors)}件 / 経過={elapsed:.1f}秒")
 
     if errors:
-        send_error_report(errors)
-        raise SystemExit(1)  # GitHub Actions にエラーを通知するため非0終了
+        send_email(
+            subject="⚠️ [Polilog] 衆議院質問主意書の同期中にエラーが発生しました",
+            body=f"以下のエラーが発生しました（{len(errors)} 件）:\n\n" + "\n".join(errors)
+        )
+        raise SystemExit(1)
+    else:
+        send_email(
+            subject="✅ [Polilog] 衆議院質問主意書の同期が完了しました",
+            body=(
+                f"同期が正常に完了しました。\n\n"
+                f"会期    : 【{session_name}】\n"
+                f"質問    : {q_count} 件\n"
+                f"答弁    : {a_count} 件\n"
+                f"upsert  : {upserted} 件\n"
+                f"経過時間: {elapsed:.1f} 秒\n"
+            )
+        )
 
 
 if __name__ == "__main__":
