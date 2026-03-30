@@ -1,0 +1,53 @@
+# .github/workflows/sync_questions_shugiin.yml
+name: 衆議院 質問主意書 日次同期
+
+on:
+  schedule:
+    # 毎日 UTC 02:00（JST 11:00）に実行
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60  # 最新会期1回分の上限（通常は20〜30分以内）
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Pythonのセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 依存関係のインストール
+        run: pip install supabase requests beautifulsoup4 lxml
+
+      - name: 衆議院 質問主意書 同期スクリプトの実行
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+        run: python sync_questions_shugiin.py
+
+      - name: 失敗時にメール通知
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_ADDRESS }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          to: ${{ secrets.MAIL_TO }}
+          from: ${{ secrets.GMAIL_ADDRESS }}
+          subject: "❌ [Polilog] 衆議院 質問主意書の同期に失敗しました"
+          body: |
+            GitHub Actions ワークフローが失敗しました。
+
+            リポジトリ: ${{ github.repository }}
+            実行ID:     ${{ github.run_id }}
+            ログURL:    ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
