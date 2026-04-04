@@ -1,0 +1,34 @@
+# .github/workflows/sync_questions_sangiin.yml
+name: 参議院 質問主意書 日次同期
+
+on:
+  schedule:
+    # 毎日 UTC 02:30（JST 11:30）に実行（衆議院の30分後）
+    - cron: '30 2 * * *'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Pythonのセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存関係のインストール
+        run: pip install supabase requests beautifulsoup4 lxml
+
+      - name: 参議院 質問主意書 同期スクリプトの実行
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+        run: python sync_questions_sangiin.py
