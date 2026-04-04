@@ -3,7 +3,7 @@
 Polilog: The Political Debugger
 「1,140万件のログが、日本の政治をデバッグする」
 
-1947年から2026年まで、1,140万件超の国会会議録および3.6万件の質問主意書を完全構造化・同期。独自の数理モデルで政治家の実務能力を評価する、次世代の政治データ解析基盤。
+1947年から2026年まで、1,113万件超の国会会議録および3.6万件の質問主意書を完全構造化・同期。独自の数理モデルで政治家の実務能力を評価する、次世代の政治データ解析基盤。
 
 Logic & Protocol
 表面的なキーワード検索を超え、7つの独自Protocolで「発言の質」を解体します。
@@ -20,5 +20,3 @@ Backend: Supabase Pro (PostgreSQL) - 11.4M+ Rows Optimized.
 Pipeline: NDL API + Written Questions Scraper (GitHub Actions).
 
 NLP: Python (spaCy / GiNZA) による高度な自然言語処理。
-
-"次元の違う透明性を、すべての市民に。"
