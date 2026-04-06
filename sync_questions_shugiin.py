@@ -305,6 +305,7 @@ def fetch_session_records(
             source_q = build_source_str(date, q_speaker, str(diet_num), q_num_text, "_q")
             records.append({
                 "id":              generate_deterministic_id(source_q),
+                "speech_id":       f"wq_{CHAMBER}_{correlation_key}_question",
                 "file_name":       f"shugiin_{diet_num}.json",
                 "doc_type":        DOC_TYPE,
                 "chamber":         CHAMBER,
@@ -332,6 +333,7 @@ def fetch_session_records(
             source_a = build_source_str(date, signer, str(diet_num), q_num_text, "_a")
             records.append({
                 "id":              generate_deterministic_id(source_a),
+                "speech_id":       f"wq_{CHAMBER}_{correlation_key}_answer",
                 "file_name":       f"shugiin_{diet_num}.json",
                 "doc_type":        DOC_TYPE,
                 "chamber":         CHAMBER,
@@ -365,7 +367,7 @@ def bulk_upsert(supabase: Client, records: list[dict]) -> tuple[int, list[str]]:
         chunk     = records[i : i + CHUNK_SIZE]
         chunk_num = i // CHUNK_SIZE + 1
         try:
-            supabase.table(TABLE).upsert(chunk, on_conflict="id").execute()
+            supabase.table(TABLE).upsert(chunk, on_conflict="speech_id").execute()
             upserted += len(chunk)
             print(f"   💾 chunk {chunk_num}/{total_chunks} ({len(chunk)}件) 完了")
         except Exception as e:
