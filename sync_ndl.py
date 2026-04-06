@@ -129,8 +129,12 @@ def main():
                 # ID生成
                 deterministic_id = get_valid_id(s)
 
+                # speech_idカラムにNDLのspeechIDを格納
+                speech_id_val = s.get("speechID")
+
                 new_data = {
                     "id": deterministic_id,
+                    "speech_id": speech_id_val,
                     "file_name": legacy_file_name,
                     "doc_type": doc_type_val,
                     "meeting_date": m_date,
@@ -141,7 +145,7 @@ def main():
                 try:
                     result = supabase.table("raw_documents").upsert(
                         new_data,
-                        on_conflict="id",
+                        on_conflict="speech_id",  # ← id から speech_id に変更
                         ignore_duplicates=False
                     ).execute()
 
