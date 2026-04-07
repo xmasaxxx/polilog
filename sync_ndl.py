@@ -57,7 +57,7 @@ def get_valid_id(s: dict) -> int:
         return int.from_bytes(digest[:8], "big") & 0x7FFFFFFFFFFFFFFF
 
     # 3. speechIDが完全にない場合のフォールバック
-    fallback_str = f"{s.get('date', 'unknown')}__{s.get('speaker', 'unknown')}__{s.get('speechOrder', '0')}__{s.get('meetingName', 'unknown')}"
+    fallback_str = f"{s.get('date', 'unknown')}__{s.get('speaker', 'unknown')}__{s.get('speechOrder', '0')}__{s.get('nameOfMeeting', 'unknown')}"
     digest = hashlib.sha256(fallback_str.encode("utf-8")).digest()
     return int.from_bytes(digest[:8], "big") & 0x7FFFFFFFFFFFFFFF
 
@@ -79,6 +79,8 @@ def main():
         upserted_count = 0
         added_count = 0
         skipped_count = 0
+        conflict_count = 0
+        error_count = 0
         total_records = None
 
         while True:
@@ -104,7 +106,7 @@ def main():
                 break
 
             for s in speeches:
-                meeting_name = s.get("meetingName", "")
+                meeting_name = s.get("nameOfMeeting", "")  # 正: nameOfMeeting（meetingNameは誤フィールド名）
 
                 # 🚨 【異物フィルター】法案や趣意書などは完全スルー
                 if "趣意書" in meeting_name or "法案" in meeting_name or "質問" in meeting_name:
@@ -145,16 +147,19 @@ def main():
                 try:
                     result = supabase.table("raw_documents").upsert(
                         new_data,
-                        on_conflict="speech_id",  # ← id から speech_id に変更
+                        on_conflict="speech_id",
                         ignore_duplicates=False
                     ).execute()
 
                     upserted_count += 1
                     if result.data:
                         added_count += 1
+                    else:
+                        conflict_count += 1
 
                 except Exception as e:
                     print(f"⚠️ DB保存エラー (ID: {deterministic_id}): {e}")
+                    error_count += 1
 
             current_start += len(speeches)
 
@@ -164,16 +169,26 @@ def main():
             time.sleep(1)
 
         # 3. 完了メール送信
-        if upserted_count > 0:
-            success_msg = (
-                f"🎉 PolilogのDB同期が完了したお！\n\n"
-                f"処理件数（新規 + 更新）: {upserted_count} 件\n"
-                f"異物スキップ: {skipped_count} 件\n"
-                f"今日も1日頑張るお！！🔥🚀"
-            )
-            send_email("【Polilog】同期レポート: 成功！", success_msg)
+        log_summary = (
+            f"対象期間    : {start_date} 〜 {end_date}\n"
+            f"API取得総数  : {total_records} 件\n"
+            f"異物スキップ  : {skipped_count} 件\n"
+            f"upsert処理  : {upserted_count} 件\n"
+            f"  - 新規insert: {added_count} 件\n"
+            f"  - conflict  : {conflict_count} 件\n"
+            f"  - エラー    : {error_count} 件\n"
+        )
+        print(log_summary)
+
+        if added_count > 0:
+            success_msg = f"🎉 PolilogのDB同期が完了したお！\n\n{log_summary}\n今日も1日頑張るお！！🔥🚀"
+            send_email("【Polilog】同期レポート: 新規データあり！", success_msg)
+        elif upserted_count > 0:
+            msg = f"🔄 既存データのみ（新規なし）\n\n{log_summary}"
+            print(msg)
+            send_email("【Polilog】同期レポート: conflictのみ（正常）", msg)
         else:
-            msg = f"🤷‍♂️ {start_date} 以降の新しい発言は見つからなかったお！"
+            msg = f"🤷‍♂️ {start_date} 以降の新しい発言は見つからなかったお！\n\n{log_summary}"
             print(msg)
             send_email("【Polilog】同期レポート: 更新なし", msg)
 
