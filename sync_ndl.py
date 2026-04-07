@@ -1,7 +1,6 @@
 import os
 import requests
 import time
-import hashlib
 from datetime import datetime, timedelta
 from supabase import create_client, Client
 import smtplib
@@ -34,32 +33,6 @@ def send_email(subject, body):
         server.quit()
     except Exception as e:
         print(f"❌ メール送信エラー: {e}")
-
-
-def get_valid_id(s: dict) -> int:
-    """
-    NDL APIの1件のspeechレコードからIDを生成する。
-
-    優先順位:
-    1. speechIDが純粋な数字 → そのままint化（NDL 8桁連番ID）
-    2. speechIDが英数字混じり → SHA-256でbigintに変換
-    3. speechIDが完全にない → フォールバック文字列をSHA-256でbigintに変換
-    """
-    speech_id = s.get("speechID", "")
-
-    # 1. 純粋な数字ならそのままint化
-    if speech_id and speech_id.isdigit():
-        return int(speech_id)
-
-    # 2. 英数字混じりのspeechIDはSHA-256でbigintに変換
-    if speech_id:
-        digest = hashlib.sha256(speech_id.encode("utf-8")).digest()
-        return int.from_bytes(digest[:8], "big") & 0x7FFFFFFFFFFFFFFF
-
-    # 3. speechIDが完全にない場合のフォールバック
-    fallback_str = f"{s.get('date', 'unknown')}__{s.get('speaker', 'unknown')}__{s.get('speechOrder', '0')}__{s.get('nameOfMeeting', 'unknown')}"
-    digest = hashlib.sha256(fallback_str.encode("utf-8")).digest()
-    return int.from_bytes(digest[:8], "big") & 0x7FFFFFFFFFFFFFFF
 
 
 def main():
@@ -106,7 +79,7 @@ def main():
                 break
 
             for s in speeches:
-                meeting_name = s.get("nameOfMeeting", "")  # 正: nameOfMeeting（meetingNameは誤フィールド名）
+                meeting_name = s.get("nameOfMeeting", "")
 
                 # 🚨 【異物フィルター】法案や趣意書などは完全スルー
                 if "趣意書" in meeting_name or "法案" in meeting_name or "質問" in meeting_name:
@@ -128,14 +101,11 @@ def main():
                 dt_obj = datetime.strptime(m_date, "%Y-%m-%d")
                 legacy_file_name = dt_obj.strftime("meeting_%Y_%m.json")
 
-                # ID生成
-                deterministic_id = get_valid_id(s)
-
                 # speech_idカラムにNDLのspeechIDを格納
+                # id は含めない（DBのシーケンスに採番を委譲）
                 speech_id_val = s.get("speechID")
 
                 new_data = {
-                    "id": deterministic_id,
                     "speech_id": speech_id_val,
                     "file_name": legacy_file_name,
                     "doc_type": doc_type_val,
@@ -158,7 +128,7 @@ def main():
                         conflict_count += 1
 
                 except Exception as e:
-                    print(f"⚠️ DB保存エラー (ID: {deterministic_id}): {e}")
+                    print(f"⚠️ DB保存エラー (speech_id: {speech_id_val}): {e}")
                     error_count += 1
 
             current_start += len(speeches)
