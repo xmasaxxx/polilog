@@ -2,9 +2,9 @@
 name: 参議院 質問主意書 日次同期
 
 on:
-  schedule:
+  #schedule:
     # 毎日 UTC 02:30（JST 11:30）に実行（衆議院の30分後）
-    - cron: '30 2 * * *'
+  #  - cron: '30 2 * * *'
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
